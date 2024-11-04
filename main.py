@@ -25,8 +25,6 @@ def get_runscript_from_code (workdir, environment, pre_instruction, instruction)
     # Prepare environment
     # TODO
     runscript_file.write("# Environment\n")
-    if pre_instruction:
-        runscript_file.write(str(pre_instruction) + "\n\n")
 
     # Pre-instructions
     # Raw instructions, no classification with untar, compile, move, install, post-install ...
