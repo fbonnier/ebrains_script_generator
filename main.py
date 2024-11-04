@@ -25,15 +25,18 @@ def get_runscript_from_code (workdir, environment, pre_instruction, instruction)
     # Prepare environment
     # TODO
     runscript_file.write("# Environment\n")
+    if pre_instruction:
+        runscript_file.write(str(pre_instruction) + "\n\n")
 
     # Pre-instructions
     # Raw instructions, no classification with untar, compile, move, install, post-install ...
     runscript_file.write("# Pre-instructions\n")
     # for ipreinstr in pre_instruction:
-    runscript_file.write(str(pre_instruction) + "\n\n")
+    if pre_instruction:
+        runscript_file.write(str(pre_instruction) + "\n\n")
 
-    runscript_file.write("# PIP list\n")
-    runscript_file.write("pip3 list\n\n")
+    runscript_file.write("# PIP modules to install\n\n")
+    # runscript_file.write("pip3 list\n\n")
     
     # Download inputs
     # runscript_file.write("# Inputs\n")
@@ -46,7 +49,8 @@ def get_runscript_from_code (workdir, environment, pre_instruction, instruction)
 
     # Run
     runscript_file.write("# RUN\n")
-    runscript_file.write(str(instruction) + "\n\n")
+    if instruction:
+        runscript_file.write(str(instruction) + "\n\n")
 
     # Stop Watchdog
     runscript_file.write("# Stop Watchdog\n")
@@ -102,8 +106,6 @@ if __name__ == "__main__":
 
     # Load instruction
     instruction = json_data["Metadata"]["run"]["instruction"]
-
-    runscript_file = None
 
     # Write runscript file from workflow
     runscript_file = get_runscript_from_workflow (workdir, workflow_run_file, workflow_data_file)
