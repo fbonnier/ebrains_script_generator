@@ -23,7 +23,7 @@ def get_runscript_from_code (workdir, environment, pre_instruction, instruction)
     runscript_file.write("set -e\n\n")
 
     # Export workdir to enable env variable in the script or model inputs
-    runscript_file.write("# Enable Workdir variable")
+    runscript_file.write("# Enable Workdir variable\n")
     runscript_file.write("export WORKDIR=" + str(workdir) + "\n\n")
 
     # Prepare environment
