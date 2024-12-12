@@ -22,6 +22,10 @@ def get_runscript_from_code (workdir, environment, pre_instruction, instruction)
     runscript_file.write("# Error handler\n")
     runscript_file.write("set -e\n\n")
 
+    # Export workdir to enable env variable in the script or model inputs
+    runscript_file.write("# Enable Workdir variable")
+    runscript_file.write("export WORKDIR=" + str(workdir) + "\n\n")
+
     # Prepare environment
     # TODO
     runscript_file.write("# Environment\n")
@@ -43,7 +47,7 @@ def get_runscript_from_code (workdir, environment, pre_instruction, instruction)
 
     # Start watchdog
     runscript_file.write("# Start Watchdog\n")
-    runscript_file.write("watchmedo shell-command --command='echo \"${watch_src_path} ${watch_dest_path}\" >> watchdog_log.txt' --patterns=\"*\" --ignore-patterns='watchdog_log.txt' --ignore-directories --recursive " + str(workdir) + " & WATCHDOG_PID=$!;\n\n")
+    runscript_file.write("watchmedo shell-command --command='echo \"${watch_src_path} ${watch_dest_path}\" >> " + str(workdir) + "watchdog_log.txt' --patterns=\"*\" --ignore-patterns='watchdog_log.txt' --ignore-directories --recursive " + str(workdir) + " & WATCHDOG_PID=$!;\n\n")
 
     # Run
     runscript_file.write("# RUN\n")
