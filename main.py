@@ -5,45 +5,190 @@ import json as json
 import warnings
 import re
 
+known_machine_confs = { "default":{
+                                "job scheduler": ["slurm"],
+                                "container manager": ["singularity"],
+                                "partition" : ["mem", "cpu_long"],
+                                "n_nodes": 2},
+                        "jusuf":{
+                                "job scheduler": ["slurm"],
+                                "container manager": ["singularity"],
+                                "partition" : ["mem", "cpu_long"],
+                                "n_nodes": 2},
+                        "ruche":{
+                                "job scheduler": ["slurm"],
+                                "container manager": ["singularity"],
+                                "partition" : ["mem", "cpu_long"],
+                                "n_nodes": 2},
+                        "spinnaker":{
+                                "job scheduler": ["job manager"],
+                                "container manager": [""],
+                                "partition" : [""],
+                                "n_nodes": 1}
+                    }
+
+def generate_cwl_script (model_id):
+    cwl_me = None
+
+    # Create cwl_file
+    cwl_me = open (str(workdir) + "/run_me.cwl", "w")
+
+    # Write the body of the CWL file
+    body = """cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: sbatch
+requirements:
+  - class: DockerRequirement
+    dockerPull: docker-registry.ebrains.eu/ebrains-model-verification/docker-"""+model_id+""":latest
+inputs:
+  runme_file:
+    type: File
+    inputBinding:
+      position: 1
+      prefix: " "
+  code_folder:
+    type: Directory
+    inputBinding:
+      position: 2
+      prefix: " "
+outputs:
+  watchdog_log:
+    type: File
+    outputBinding:
+      glob: "./watchdog_log.txt"
+  output_folder:
+    type: Directory
+    outputBinding:
+      glob: "./outputs"
+"""
+    cwl_me.write(body)
+
+
+def generate_input_yml (machine_config):
+    pass
+
+def generate_sbatch (machine_config):
+    srun_me = None
+
+    # Create srunscript_file
+    srun_me = open (str(workdir) + "/srun_me.sh", "w")
+
+    # Write the head of the file according to machine config
+    srun_me.write("#!/bin/bash\n\n")
+    if machine_config["account"]: srun_me.write("#SBATCH --account=" + machine_config["account"] + "\n")
+    if machine_config["user mail"]:
+        srun_me.write("#SBATCH --mail-user=" + machine_config["user mail"] + "\n")
+        srun_me.write("#SBATCH --mail-type=all\n")
+    if machine_config["partition"]: srun_me.write("#SBATCH --partition="+machine_config["partition"] + "\n")
+    srun_me.write("#SBATCH --wait\n")
+    if machine_config["n_nodes"]: srun_me.write("#SBATCH --nodes=" + machine_config["n_nodes"] + "\n")
+    # if machine_config["container manager"]: runscript_file.write("--"+machine_config["container manager"])
+    srun_me.write("\n\n")
+
+    # Prepare environment
+    srun_me.write("# Environment\n")
+    
+    # Write modules to load after a purge
+    srun_me.write("# Modules\n")
+    srun_me.write("module purge\n")
+    
+    if machine_config["modules"]:
+        for imodule in machine_config["modules"]:
+            srun_me.write("module load " + imodule)
+    
+    # # Pre-instructions
+    # # Raw instructions, no classification with untar, compile, move, install, post-install ...
+    # runscript_file.write("# Model Pre-instructions\n")
+    # # for ipreinstr in pre_instruction:
+    # if pre_instruction:
+    #     runscript_file.write(str(pre_instruction) + "\n\n")
+
+    # runscript_file.write("# PIP modules to install\n\n")
+    # # runscript_file.write("pip3 list\n\n")
+
+    # SRun and wait till the script ends
+    model_id = int(0)
+    outputdir = str(workdir) + "/output-" + model_id
+    cwl_runscript = "run_model-" + model_id + ".cwl"
+    srun_me.write("# SRUN\n")
+    srun_me.write(str("srun --wait cwltool --outputdir" + outputdir + " " + cwl_runscript + " " + inputs_file) + "\n\n")
+
+    # Close file
+    srun_me.close()
+
+    return srun_me
+
+# Check if the machine configuration is supported
+def check_machine_conf (machine_conf):
+    
+    pass
+
+def get_machine_conf (machine_config_file=None):
+    machine_config = {}
+    if machine_config_file:
+        # Load configuration JSON file
+        try:
+            json_data = json.load(json_file)
+        except Exception as e:
+            print (e)
+            print ("Error in reading machine configuration file")
+        try:    
+            machine_config["machine"] = json_data["machine"]
+            if machine_config["machine"] in known_machine_confs.keys():
+                machine_config["container manager"] = json_data["container manager"]
+            else:
+                print("Machine configuration unknown -- Loding default configuration file")
+                
+            machine_config["partition"] = json_data["partition"]
+            machine_config["modules"] = json_data["modules"]
+            machine_config["n_nodes"] = json_data["n_nodes"]
+            machine_config["account"] = json_data["account"]
+            machine_config["user mail"] = json_data["user mail"]
+            machine_config["pre-instructions"] = json_data["pre-instructions"]
+        except Exception as e:
+            print(e)
+            print("Machine configuration file not recognized\nGet default machine configuration\n")
+            machine_config = get_machine_conf("default")
+    else: pass
+    return machine_config
+         
+
 def get_runscript_from_workflow (workdir, workflow_run, workflow_data):
     runscript_file = None
     if (workflow_run):
         pass
     return runscript_file 
 
-def get_runscript_from_code (workdir, environment, pre_instruction, instruction):
+def generate_runscript_from_code (workdir, environment, pre_instruction, instruction):
     runscript_file = None
 
     # Create runscript_file
     runscript_file = open (str(workdir) + "/run_me.sh", "w")
-    runscript_file.write("#!/bin/bash\n\n")
 
+    # Write the head of the file according to machine config
+    runscript_file.write("#!/bin/bash\n\n")
+    
     # Set error handler: if any command returns other value than exit(0) in the script, stops the script
     runscript_file.write("# Error handler\n")
     runscript_file.write("set -e\n\n")
 
-    # Export workdir to enable env variable in the script or model inputs
-    runscript_file.write("# Enable Workdir variable\n")
-    runscript_file.write("export WORKDIR=" + str(workdir) + "\n\n")
+    # # Export workdir to enable env variable in the script or model inputs
+    # runscript_file.write("# Enable Workdir variable\n")
+    # runscript_file.write("export WORKDIR=" + str(workdir) + "\n\n")
 
     # Prepare environment
     # TODO
     runscript_file.write("# Environment\n")
-
+    
     # Pre-instructions
     # Raw instructions, no classification with untar, compile, move, install, post-install ...
-    runscript_file.write("# Pre-instructions\n")
+    runscript_file.write("# Model Pre-instructions\n")
     # for ipreinstr in pre_instruction:
     if pre_instruction:
         runscript_file.write(str(pre_instruction) + "\n\n")
 
     runscript_file.write("# PIP modules to install\n\n")
     # runscript_file.write("pip3 list\n\n")
-    
-    # Download inputs
-    # runscript_file.write("# Inputs\n")
-    # for iinput in inputs:
-        # runscript_file.write("wget -N " + str(iinput['url']) + " " + str(iinput['path']) + "\n\n")
 
     # Start watchdog
     runscript_file.write("# Start Watchdog\n")
@@ -54,13 +199,10 @@ def get_runscript_from_code (workdir, environment, pre_instruction, instruction)
     if instruction:
         runscript_file.write(str(instruction) + "\n\n")
 
+
     # Stop Watchdog
     runscript_file.write("# Stop Watchdog\n")
     runscript_file.write("kill -s 9 \"${WATCHDOG_PID}\";\n\n")
-
-    # Extract watchdog files and add output files to JSON report
-    # runscript_file.write("# Extract watchdog files and add output files to JSON report\n")
-    # runscript_file.write("hbp_extract_watchdog --json " + str (json_file) + " --watchdog watchdog_log.txt;\n\n")
 
     # Close file
     runscript_file.close()
@@ -74,6 +216,9 @@ if __name__ == "__main__":
     parser.add_argument("--json", type=argparse.FileType('r'), metavar="JSON Metadata file", nargs=1, dest="json", default="",\
     help="JSON File that contains Metadata of the HBP model to run")
 
+    parser.add_argument("--machine", type=argparse.FileType('r'), metavar="JSON machine configuration file", nargs=1, dest="machine", default="",\
+    help="JSON File that contains targeted configuration parameters")
+
     args = parser.parse_args()
 
 
@@ -83,6 +228,9 @@ if __name__ == "__main__":
         print ("Fatal Error:  Invalid JSON File, please give a valid JSON file using \"--json <path-to-file>\"")
         exit(1)
     json_data = json.load(json_file)
+
+    # Load Machine configuration file
+    
 
     # Load workdir
     workdir = json_data["Metadata"]["workdir"]
@@ -109,11 +257,26 @@ if __name__ == "__main__":
     # Load instruction
     instruction = json_data["Metadata"]["run"]["instruction"]
 
+    # Get machine configuration
+    # TODO
+    machine_config_file = None
+    try:
+        machine_config_file = args["machine"]
+    except Exception as e:
+        print(e)
+
+    # Check if the machine configuration is supported
+    check_machine_conf (machine_config_file=machine_config_file)
+    machine_config = get_machine_conf(machine_config_file=machine_config_file)
+    
+    # Write sbatch file
+    sbatch_file = generate_sbatch (machine_config)
+
     # Write runscript file from workflow
     runscript_file = get_runscript_from_workflow (workdir, workflow_run_file, workflow_data_file)
 
     # Write runscript file from runscript
     if (not runscript_file):
-        runscript_file = get_runscript_from_code (workdir, environment, pre_instruction, instruction)
-
+        runscript_file = generate_runscript_from_code (workdir, environment, pre_instruction, instruction)
+    
     sys.exit()
