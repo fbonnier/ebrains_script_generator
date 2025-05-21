@@ -22,7 +22,7 @@ if [ "$JSON_PATH" == "" ]; then
     echo "Parameter is missing:"
     echo "--json: path of the requiered metadata JSON file"
     exit 1
-else if [ "$MACHINE_CONFIG_PATH" != "" ]; then
+elif [ "$MACHINE_CONFIG_PATH" != "" ]; then
     python3 $( dirname -- "$0"; )/main.py --json $JSON_PATH --machine $MACHINE_CONFIG_PATH
 else
     echo "Machine configuration is missing"
