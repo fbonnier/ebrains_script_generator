@@ -235,7 +235,7 @@ if __name__ == "__main__":
     parser.add_argument("--json", type=argparse.FileType('r'), metavar="JSON Metadata file", nargs=1, dest="json", default="",\
     help="JSON File that contains Metadata of the HBP model to run")
 
-    parser.add_argument("--machine", type=argparse.FileType('r'), metavar="JSON machine configuration file", nargs=1, dest="machine", default="",\
+    parser.add_argument("--machine", type=argparse.FileType('r'), metavar="JSON machine configuration file", nargs='?', dest="machine", default="",\
     help="JSON File that contains targeted configuration parameters")
 
     args = parser.parse_args()
@@ -284,12 +284,12 @@ if __name__ == "__main__":
     except Exception as e:
         print(e)
 
-    # Check if the machine configuration is supported
-    check_machine_conf (machine_config_file=machine_config_file)
-    machine_config = get_machine_conf(machine_config_file=machine_config_file)
+    # # Check if the machine configuration is supported
+    # check_machine_conf (machine_config_file=machine_config_file)
+    # machine_config = get_machine_conf(machine_config_file=machine_config_file)
     
-    # Write sbatch file
-    sbatch_file = generate_sbatch (machine_config)
+    # # Write sbatch file
+    # sbatch_file = generate_sbatch (machine_config)
 
     # Write runscript file from workflow
     runscript_file = get_runscript_from_workflow (workdir, workflow_run_file, workflow_data_file)
