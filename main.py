@@ -65,7 +65,25 @@ outputs:
 
 
 def generate_input_yml (machine_config):
-    pass
+    input_me = None
+    
+    # Write the body of the YML file
+    body = "runme_file: run_me.sh\n"
+    body += "code_folder: code\n"
+    
+    ##### WRITE BODY #####
+    try:
+        # Create input_file
+        input_me = open (str(workdir) + "/input_me.yml", "w")
+        # Write the body of the YML file
+        input_me.write(body)
+        input_me.close()
+    except Exception as e:
+        print (e)
+        print ("Error in creating input_me.yml file")
+        sys.exit(1)
+
+
 
 def generate_sbatch (machine_config):
     srun_me = None
