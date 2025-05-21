@@ -235,8 +235,8 @@ if __name__ == "__main__":
     parser.add_argument("--json", type=argparse.FileType('r'), metavar="JSON Metadata file", nargs=1, dest="json", default="",\
     help="JSON File that contains Metadata of the HBP model to run")
 
-    parser.add_argument("--machine", type=argparse.FileType('r'), metavar="JSON machine configuration file", nargs='?', dest="machine", default="",\
-    help="JSON File that contains targeted configuration parameters")
+    # parser.add_argument("--machine", type=argparse.FileType('r'), metavar="JSON machine configuration file", nargs='?', dest="machine", default="",\
+    # help="JSON File that contains targeted configuration parameters")
 
     args = parser.parse_args()
 
@@ -278,11 +278,11 @@ if __name__ == "__main__":
 
     # Get machine configuration
     # TODO
-    machine_config_file = None
-    try:
-        machine_config_file = args["machine"]
-    except Exception as e:
-        print(e)
+    # machine_config_file = None
+    # try:
+    #     machine_config_file = args["machine"]
+    # except Exception as e:
+    #     print(e)
 
     # # Check if the machine configuration is supported
     # check_machine_conf (machine_config_file=machine_config_file)
