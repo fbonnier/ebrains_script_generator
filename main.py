@@ -128,6 +128,7 @@ def generate_sbatch (machine_config):
     model_id = int(0)
     outputdir = str(workdir) + "/output-" + model_id
     cwl_runscript = "run_model-" + model_id + ".cwl"
+    inputs_file = str(workdir) + "/input_me.yml"
     srun_me.write("# SRUN\n")
     srun_me.write(str("srun --wait cwltool --outputdir" + outputdir + " " + cwl_runscript + " " + inputs_file) + "\n\n")
 
