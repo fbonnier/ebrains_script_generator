@@ -178,7 +178,7 @@ def get_runscript_from_workflow (workdir, workflow_run, workflow_data):
         pass
     return runscript_file 
 
-def generate_runscript_from_code (workdir, environment, pre_instruction, instruction):
+def generate_runscript_from_code (workdir=".", environment=None, pre_instruction=None, instruction="run", outputs_folder_path="."):
     runscript_file = None
 
     # Create runscript_file
@@ -211,7 +211,7 @@ def generate_runscript_from_code (workdir, environment, pre_instruction, instruc
 
     # Start watchdog
     runscript_file.write("# Start Watchdog\n")
-    runscript_file.write("watchmedo shell-command --command='echo \"${watch_src_path} ${watch_dest_path}\" >> " + str(workdir) + "watchdog_log.txt' --patterns=\"*\" --ignore-patterns='watchdog_log.txt' --ignore-directories --recursive " + str(workdir) + " & WATCHDOG_PID=$!;\n\n")
+    runscript_file.write("watchmedo shell-command --command='echo \"${watch_src_path} ${watch_dest_path}\" >> " + str(workdir) + "watchdog_log.txt' --patterns=\"*\" --ignore-patterns='watchdog_log.txt;run_stderr.txt;run_stdout.txt' --ignore-directories --recursive " + str(outputs_folder_path) + " & WATCHDOG_PID=$!;\n\n")
 
     # Run
     runscript_file.write("# RUN\n")
@@ -235,6 +235,9 @@ if __name__ == "__main__":
     parser.add_argument("--json", type=argparse.FileType('r'), metavar="JSON Metadata file", nargs=1, dest="json", default="",\
     help="JSON File that contains Metadata of the HBP model to run")
 
+    parser.add_argument("--outputdir", type=str, metavar="Outputs Directory", nargs=1, dest="outputdir", default="",\
+    help="Directory where outputs will be stored and where the watchdog will look at")
+
     # parser.add_argument("--machine", type=argparse.FileType('r'), metavar="JSON machine configuration file", nargs='?', dest="machine", default="", required=False\
     # help="JSON File that contains targeted configuration parameters")
 
@@ -247,6 +250,9 @@ if __name__ == "__main__":
         print ("Fatal Error:  Invalid JSON File, please give a valid JSON file using \"--json <path-to-file>\"")
         exit(1)
     json_data = json.load(json_file)
+
+    # Load output directory
+    outputdir = args.outputdir[0] if args.outputdir else "."
 
     # Load Machine configuration file
     
@@ -296,6 +302,6 @@ if __name__ == "__main__":
 
     # Write runscript file from runscript
     if (not runscript_file):
-        runscript_file = generate_runscript_from_code (workdir, environment, pre_instruction, instruction)
+        runscript_file = generate_runscript_from_code (workdir, environment, pre_instruction, instruction, outputs_folder_path=".")
     
     sys.exit()
