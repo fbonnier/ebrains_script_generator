@@ -2,6 +2,7 @@
 
 JSON_PATH=""
 MACHINE_CONFIG_PATH=""
+OUTPUTDIR=""
 
 NARGS=$(($#-1))
 
@@ -16,16 +17,35 @@ for (( iarg=1; iarg<=NARGS; iarg++)); do
         then
             MACHINE_CONFIG_PATH=${!jarg}
     fi
+    if [ "${!iarg}" == "--outputdir" ]
+        then
+            OUTPUTDIR=${!jarg}
+    fi
 done
+
+
+TORUN="python3 $( dirname -- $0; )/main.py"
 
 if [ "$JSON_PATH" == "" ]; then
     echo "Parameter is missing:"
     echo "--json: path of the requiered metadata JSON file"
     exit 1
-elif [ "$MACHINE_CONFIG_PATH" != "" ]; then
-    python3 $( dirname -- "$0"; )/main.py --json $JSON_PATH --machine $MACHINE_CONFIG_PATH
+else
+    TORUN="${TORUN} --json=${JSON_PATH}"
+fi
+
+if [ "$MACHINE_CONFIG_PATH" != "" ]; then
+    TORUN="${TORUN} --machine=${MACHINE_CONFIG_PATH}"
 else
     echo "Machine configuration is missing"
     echo "Running script_generator without machine configuration"
-    python3 $( dirname -- "$0"; )/main.py --json $JSON_PATH
 fi
+
+if [ "$OUTPUTDIR" != "" ]; then
+    TORUN="${TORUN} --outputdir=${OUTPUTDIR}"
+else
+    echo "Output directory is missing"
+    echo "Running script_generator with default output directory \".\""
+fi
+
+$TORUN
