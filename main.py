@@ -211,11 +211,13 @@ def generate_runscript_from_code (workdir=".", environment=None, pre_instruction
 
     # Start watchdog
     runscript_file.write("# Start Watchdog\n")
-    runscript_file.write("watchmedo shell-command --command='echo \"${watch_src_path} ${watch_dest_path}\" >> " + str(workdir) + "watchdog_log.txt' --patterns=\"*\" --ignore-patterns=watchdog_log.txt;run_stderr.txt;run_stdout.txt --ignore-directories --recursive " + str(outputs_folder_path) + " & WATCHDOG_PID=$!;\n\n")
+    runscript_file.write("echo Start Watchdog\n")
+    runscript_file.write("watchmedo shell-command --command='echo \"${watch_src_path} ${watch_dest_path}\" >> " + str(workdir) + "watchdog_log.txt' --patterns=\"*\" --ignore-patterns=watchdog_log.txt --ignore-directories --recursive " + str(outputs_folder_path) + " & WATCHDOG_PID=$!;\n\n")
 
     # Run
     runscript_file.write("# RUN\n")
     if instruction:
+        runscript_file.write("echo Start Simulation Run\n")
         runscript_file.write(str(instruction) + "\n\n")
 
 
@@ -302,6 +304,6 @@ if __name__ == "__main__":
 
     # Write runscript file from runscript
     if (not runscript_file):
-        runscript_file = generate_runscript_from_code (workdir, environment, pre_instruction, instruction, outputs_folder_path=".")
+        runscript_file = generate_runscript_from_code (workdir, environment, pre_instruction, instruction, outputs_folder_path="/tmp/outputs")
     
     sys.exit()
